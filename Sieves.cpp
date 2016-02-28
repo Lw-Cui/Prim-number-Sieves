@@ -3,9 +3,24 @@
 #include <assert.h>
 #include <mpi.h>
 
-//TODO
 int simple_sieves(int origin) {
-	return 0;
+	bool *array = new bool[origin + 1];
+	memset(array, true, sizeof(bool) * (origin + 1));
+	array[0] = array[1] = false;
+	int prime = 0;
+	while (prime * prime <= origin) {
+		do 
+			prime++;
+		while (!array[prime]);
+		printf("%d\n", prime);
+		for (int i = prime * prime; i <= origin; i++)
+			if (array[i] && i % prime == 0)
+				array[i] = !array[i];
+	}
+	int ans = 0;
+	for (int i = 0; i <= origin; i++)
+		if (array[i]) ans++;
+	return ans;
 }
 
 int sieves(int origin, int p, int id) {
@@ -47,7 +62,7 @@ int main(int argc, char *argv[]) {
 	int p;
 	MPI_Comm_size(MPI_COMM_WORLD, &p);
 	// num: the integer number of each process
-	// n / p > sqrt(n) -> n > p ^ 2
+	// n / p > sqrt(n)(low floor) -> n > p ^ 2
 	int ans;
 	if (p * p > origin)
 		ans = simple_sieves(origin);
