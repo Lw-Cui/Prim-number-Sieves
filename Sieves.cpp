@@ -12,7 +12,6 @@ int simple_sieves(int origin) {
 		do 
 			prime++;
 		while (!array[prime]);
-		printf("%d\n", prime);
 		for (int i = prime * prime; i <= origin; i++)
 			if (array[i] && i % prime == 0)
 				array[i] = !array[i];
@@ -28,24 +27,34 @@ int sieves(int origin, int p, int id) {
 	int num = (origin + 1) / p + ((origin + 1) % p? 1: 0);
 	assert(num);
 	bool *array = new bool[num];
-	// The range of process n is [n * num, 2n * num - 1]
+	int base = id * num;
+	// The range of process n is [id * num, 2 * id * num - 1]
 	memset(array, true, sizeof(bool) * num);
+	// Zero and one isn't prime
 	if (!id) array[0] = array[1] = false;
-	int prime = 0;
-	while (prime * prime <= origin) {
+	int prime = 2;
+	do {
+		// The first element of sub-array is (id * num)
+		int i = 0;
+		if (!(id && base % prime)) i = 0;
+		else i = prime - base % prime;
+		while (i < num) {
+			// array[i] isn't prime if 1)array[i] % prime == 0 2)array[i] != prime
+			if (array[i] && base + i != prime)
+				array[i] = !array[i];
+			i += prime;
+		}
 		do 
 			prime++;
-		while (!array[prime]);
+		while (prime < num && !array[prime]);
 		MPI_Bcast(&prime, 1, MPI_INT, 0, MPI_COMM_WORLD);
-		for (int i = 0; i < num; i++)
-			//array[i] isn't prime if 1)array[i] % prime == 0 2)array[i] != prime
-			if (array[i] && (id * num + i) % prime == 0 && id * num + i != prime)
-				array[i] = !array[i];
-	}
+	} while (prime * prime < origin);
 	int cnt = 0;
 	for (int i = 0; i < num; i++)
-		if (array[i] && id * num + i <= origin) {
+		if (array[i] && base + i <= origin) {
 		 cnt++;
+		 printf("%d\n", base + i);
+		 fflush(stdout);
 		}
 	delete[] array;
 	int ans;
