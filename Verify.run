@@ -1,0 +1,7 @@
+#!/bin/bash
+NUM=100000000
+mpirun.mpich -np 4 ./Sieves.out $NUM > S1m
+sort S1m -n -o S1m
+./Verification.out $NUM > V1m
+diff S1m V1m 
+[ $? -eq 0 ] && echo "Yeah"
