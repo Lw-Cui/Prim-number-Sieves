@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <mpi.h>
@@ -50,12 +51,18 @@ int sieves(int origin, int p, int id) {
 		MPI_Bcast(&prime, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	} while (prime * prime < origin);
 	int cnt = 0;
+	const size_t len = 10;
+	char str[len];
+	snprintf(str, len, "Prime.%d", id);
+	FILE *pFile;
+	if (getenv("DEBUG")) pFile = fopen(str, "w");
 	for (int i = 0; i < num; i++)
 		if (array[i] && base + i <= origin) {
-		 cnt++;
-		 printf("%d\n", base + i);
-		 fflush(stdout);
+			cnt++;
+			if (getenv("DEBUG"))
+			  fprintf(pFile, "%d\n", base + i);
 		}
+	if (getenv("DEBUG")) fclose(pFile);
 	delete[] array;
 	int ans;
 	MPI_Reduce(&cnt, &ans, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
